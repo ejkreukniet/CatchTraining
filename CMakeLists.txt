@@ -5,4 +5,4 @@ set(CMAKE_CXX_STANDARD 14)
 
 include_directories(/mnt/sdb1/Project/MachineLearning/eigen/)
 
-add_executable(MachineLearning Common.cpp Logistic.cpp MachineLearning.cpp Multi.cpp Single.cpp)
+add_executable(MachineLearning main.cpp Common.cpp Logistic.cpp Multi.cpp Single.cpp)
