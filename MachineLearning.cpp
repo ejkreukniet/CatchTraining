@@ -5,7 +5,7 @@
 
 int main()
 {
-	testLinearRegression();
-	testLinearRegressionWithMultipleFeatures();
-	testLogisticRegression();
+    testLinearRegression();
+    testLinearRegressionWithMultipleFeatures();
+    testLogisticRegression();
 }
