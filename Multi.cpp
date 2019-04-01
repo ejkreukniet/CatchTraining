@@ -6,6 +6,8 @@
 
 #include "Common.h"
 
+#include "catch.hpp"
+
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
@@ -40,7 +42,7 @@ VectorXd normalEquation(MatrixXd X, MatrixXd y)
     return (X.transpose() * X).inverse() * X.transpose() * y;
 }
 
-void testLinearRegressionWithMultipleFeatures()
+TEST_CASE("Multiple Features", "[MultipleFeatures]")
 {
     const int NUMBER_OF_VALUES = 1;
 
@@ -48,7 +50,8 @@ void testLinearRegressionWithMultipleFeatures()
     int m = (int) data.rows(); // Number of training samples
     int n = (int) data.cols() - NUMBER_OF_VALUES; // Number of features
 
-    std::cout << "\nTraining samples: " << m << ", Features: " << n << std::endl;
+    REQUIRE(m == 47);
+    REQUIRE(n == 2);
 
     // Features
     MatrixXd X(m, n + 1);
@@ -64,12 +67,14 @@ void testLinearRegressionWithMultipleFeatures()
 
     // Feature normalize
     VectorXd mu = X.rightCols(n).colwise().mean();
-    assertValue("mu 0", 2000.6809, mu(0));
-    assertValue("mu 1", 3.1702, mu(1));
+
+    REQUIRE_THAT(mu(0), Catch::Matchers::WithinAbs(2000.6809, 0.0001));
+    REQUIRE_THAT(mu(1), Catch::Matchers::WithinAbs(3.1702, 0.0001));
 
     VectorXd sigma = ((X.rightCols(n).rowwise() - mu.transpose()).array().square().colwise().sum() / (m - 1)).sqrt();
-    assertValue("sigma 0", 794.70235, sigma(0));
-    assertValue("sigma 1", 0.76098, sigma(1));
+
+    REQUIRE_THAT(sigma(0), Catch::Matchers::WithinAbs(794.70235, 0.0001));
+    REQUIRE_THAT(sigma(1), Catch::Matchers::WithinAbs(0.76098, 0.0001));
 
     MatrixXd temp = X.rightCols(n).rowwise() - mu.transpose();
 
@@ -80,34 +85,39 @@ void testLinearRegressionWithMultipleFeatures()
 
     X.block(0, 1, m, n) = temp;
 
-    std::cout << "\nWith gradient descent" << std::endl;
+    SECTION("With gradient descent") {
+        theta = gradientDescentMulti(X, y, theta, 0.01, 400);
 
-    theta = gradientDescentMulti(X, y, theta, 0.01, 400);
-    assertValue("Theta 0", 334302.0, theta(0));
-    assertValue("Theta 1", 100087.0, theta(1));
-    assertValue("Theta 2", 3673.55, theta(2));
+        REQUIRE_THAT(theta(0), Catch::Matchers::WithinAbs(334302.0639, 0.0001));
+        REQUIRE_THAT(theta(1), Catch::Matchers::WithinAbs(100087.116, 0.0001));
+        REQUIRE_THAT(theta(2), Catch::Matchers::WithinAbs(3673.5484, 0.0001));
 
-    VectorXd predict(n + 1);
-    predict << 1, 1650, 3;
-    predict(1) = (predict(1) - mu(0)) / sigma(0);
-    predict(2) = (predict(2) - mu(1)) / sigma(1);
+        VectorXd predict(n + 1);
+        predict << 1, 1650, 3; // Predicted price of a 1650 sq-ft, 3 br house
+        predict(1) = (predict(1) - mu(0)) / sigma(0);
+        predict(2) = (predict(2) - mu(1)) / sigma(1);
 
-    double price = theta.transpose().dot(predict);
-    assertValue("Predicted price of a 1650 sq-ft, 3 br house", 289314.620338, price);
+        double price = theta.transpose().dot(predict);
 
-    std::cout << "\nWith normal equation" << std::endl;
+        REQUIRE_THAT(price, Catch::Matchers::WithinAbs(289314.620338, 0.0001));
+    }
 
-    // Calculate the parameters from the normal equation
-    X.block(0, 0, m, 1) = MatrixXd::Ones(m, 1);
-    X.block(0, 1, m, n) = data.block(0, 0, m, n);
+    SECTION("With normal equation") {
+        // Calculate the parameters from the normal equation
+        X.block(0, 0, m, 1) = MatrixXd::Ones(m, 1);
+        X.block(0, 1, m, n) = data.block(0, 0, m, n);
 
-    theta = normalEquation(X, y);
-    assertValue("Theta 0", 89597.9, theta(0));
-    assertValue("Theta 1", 139.211, theta(1));
-    assertValue("Theta 2", -8738.02, theta(2));
+        theta = normalEquation(X, y);
 
-    predict << 1, 1650, 3;
+        REQUIRE_THAT(theta(0), Catch::Matchers::WithinAbs(89597.9095, 0.0001));
+        REQUIRE_THAT(theta(1), Catch::Matchers::WithinAbs(139.2107, 0.0001));
+        REQUIRE_THAT(theta(2), Catch::Matchers::WithinAbs(-8738.0191, 0.0001));
 
-    price = theta.transpose().dot(predict);
-    assertValue("Predicted price of a 1650 sq-ft, 3 br house (using normal equations)", 293081.464335, price);
+        VectorXd predict(n + 1);
+        predict << 1, 1650, 3; // Predicted price of a 1650 sq-ft, 3 br house
+
+        double price = theta.transpose().dot(predict);
+
+        REQUIRE_THAT(price, Catch::Matchers::WithinAbs(293081.464335, 0.0001));
+    }
 }

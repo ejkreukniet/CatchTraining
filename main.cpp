@@ -1,11 +1,9 @@
 
-#include "Single.h"
-#include "Multi.h"
-#include "Logistic.h"
+#define CATCH_CONFIG_MAIN
+#include "catch.hpp"
 
-int main()
-{
-    testLinearRegression();
-    testLinearRegressionWithMultipleFeatures();
-    testLogisticRegression();
+int theAnswer() { return 6*7; }
+
+TEST_CASE( "Life, the universe and everything", "[42][theAnswer]" ) {
+    REQUIRE( theAnswer() == 42 );
 }

@@ -6,6 +6,8 @@
 
 #include "Common.h"
 
+#include "catch.hpp"
+
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
@@ -33,7 +35,7 @@ VectorXd gradientDescent(MatrixXd X, MatrixXd y, VectorXd theta, double alpha, i
     return theta;
 }
 
-void testLinearRegression()
+TEST_CASE( "Single Feature", "[SingleFeature]" )
 {
     const int NUMBER_OF_VALUES = 1;
 
@@ -41,7 +43,8 @@ void testLinearRegression()
     int m = (int) data.rows(); // Number of training samples
     int n = (int) data.cols() - NUMBER_OF_VALUES; // Number of features
 
-    std::cout << "\nTraining samples: " << m << ", Features: " << n << std::endl;
+    REQUIRE(m == 97);
+    REQUIRE(n == 1);
 
     // Features
     MatrixXd X(m, n + 1);
@@ -56,23 +59,28 @@ void testLinearRegression()
     theta << VectorXd::Zero(n + 1);
 
     double J = computeCost(X, y, theta);
-    assertValue("Cost 1", 32.07, J);
+
+    REQUIRE_THAT(J, Catch::Matchers::WithinAbs(32.0727, 0.0001));
 
     VectorXd test(n + 1);
     test << -1, 2;
 
     J = computeCost(X, y, test);
-    assertValue("Cost 2", 54.24, J);
+
+    REQUIRE_THAT(J, Catch::Matchers::WithinAbs(54.2425, 0.0001));
 
     theta = gradientDescent(X, y, theta, 0.01, 1500);
-    assertValue("Theta 0", -3.6303, theta(0));
-    assertValue("Theta 1", 1.1664, theta(1));
+
+    REQUIRE_THAT(theta(0), Catch::Matchers::WithinAbs(-3.6303, 0.0001));
+    REQUIRE_THAT(theta(1), Catch::Matchers::WithinAbs(1.1664, 0.0001));
 
     MatrixXd predict1(1, n + 1);
-    predict1 << 1, 3.5;
-    assertValue("Predict profit for population 35,000", 4519.767868, (predict1 * theta * 10000.0)(0));
+    predict1 << 1, 3.5; // Predict profit for population 35,000
+
+    REQUIRE_THAT((predict1 * theta * 10000.0)(0), Catch::Matchers::WithinAbs(4519.767868, 0.0001));
 
     MatrixXd predict2(1, n + 1);
-    predict2 << 1, 7;
-    assertValue("Predict profit for population 70,000", 45342.450129, (predict2 * theta * 10000.0)(0));
+    predict2 << 1, 7; // Predict profit for population 70,000
+
+    REQUIRE_THAT((predict2 * theta * 10000.0)(0), Catch::Matchers::WithinAbs(45342.450129, 0.0001));
 }
