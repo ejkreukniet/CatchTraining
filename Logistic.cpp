@@ -16,33 +16,35 @@ MatrixXd sigmoid(MatrixXd z)
     return (1 + (-z).array().exp()).inverse().matrix();
 }
 
-double computeCostSigmoid(MatrixXd X, MatrixXd y, VectorXd theta)
+double computeCostSigmoid(MatrixXd X, MatrixXd y, VectorXd theta, VectorXd &grad)
 {
     int m = (int) X.rows(); // Number of training samples
 
     MatrixXd h = sigmoid(X * theta);
 
-    // J = (-y' *log(h) - (1-y)' * log(1-h))/m;
-    // grad = (X'*(h - y))/m;
     VectorXd J = (-y.transpose() * h.array().log().matrix()
         - (1 - y.array()).matrix().transpose() * (1 - h.array()).log().matrix()) / m;
+
+    grad = (X.transpose() * (h - y)) / m;
 
     return J(0);
 }
 
-VectorXd gradientDescentLogistic(MatrixXd X, MatrixXd y, VectorXd theta, double alpha, int iterations)
+double gradientDescentLogistic(MatrixXd X, MatrixXd y, VectorXd &theta, double alpha, int iterations)
 {
     int m = (int) X.rows(); // Number of training samples
 
     VectorXd J_history = VectorXd::Zero(iterations);
 
+    VectorXd grad;
+
     for (int i = 0; i < iterations; ++i) {
         theta -= X.transpose() * (sigmoid(X * theta) - y) * (alpha / m);
 
-        J_history(i) = computeCostSigmoid(X, y, theta);
+        J_history(i) = computeCostSigmoid(X, y, theta, grad);
     }
-//std::cout << "J_history: " << J_history << std::endl;
-    return theta;
+
+    return J_history(iterations - 1);
 }
 
 MatrixXd predictLabels(MatrixXd X, VectorXd theta)
@@ -80,36 +82,31 @@ TEST_CASE( "Logistic Regression", "[LogisticRegression]" )
 
     VectorXd theta(n + 1);
     theta << VectorXd::Zero(n + 1);
+    VectorXd grad;
 
-    //std::cout << "X: " << X.block(0, 0, 10, n + 1) << std::endl;
-    //std::cout << "y: " << y.block(0, 0, 10, NUMBER_OF_VALUES) << std::endl;
-    //std::cout << "theta: " << theta << std::endl;
-
-    double J = computeCostSigmoid(X, y, theta);
+    double J = computeCostSigmoid(X, y, theta, grad);
 
     REQUIRE_THAT(J, Catch::Matchers::WithinAbs(0.6931, 0.0001));
+
+    REQUIRE_THAT(grad(0), Catch::Matchers::WithinAbs(-0.1000, 0.0001));
+    REQUIRE_THAT(grad(1), Catch::Matchers::WithinAbs(-12.0092, 0.0001));
+    REQUIRE_THAT(grad(2), Catch::Matchers::WithinAbs(-11.2628, 0.0001));
 
     VectorXd test(n + 1);
     test << -24, 0.2, 0.2;
 
-    J = computeCostSigmoid(X, y, test);
+    J = computeCostSigmoid(X, y, test, grad);
 
     REQUIRE_THAT(J, Catch::Matchers::WithinAbs(0.2183, 0.0001));
 
+    REQUIRE_THAT(grad(0), Catch::Matchers::WithinAbs(0.043, 0.001));
+    REQUIRE_THAT(grad(1), Catch::Matchers::WithinAbs(2.566, 0.001));
+    REQUIRE_THAT(grad(2), Catch::Matchers::WithinAbs(2.647, 0.001));
+
     // Feature normalize
     VectorXd mu = X.rightCols(n).colwise().mean();
-    std::cout << "mu: " << mu << std::endl;
-    //assertValue("mu 0", 2000.6809, mu(0));
-    //assertValue("mu 1", 3.1702, mu(1));
 
     VectorXd sigma = ((X.rightCols(n).rowwise() - mu.transpose()).array().square().colwise().sum() / (m - 1)).sqrt();
-    std::cout << "sigma: " << sigma << std::endl;
-    //assertValue("sigma 0", 794.70235, sigma(0));
-    //assertValue("sigma 1", 0.76098, sigma(1));
-//mu: 65.6443
-// 66.222
-//sigma: 19.4582
-//18.5828
 
     MatrixXd temp = X.rightCols(n).rowwise() - mu.transpose();
 
@@ -118,35 +115,32 @@ TEST_CASE( "Logistic Regression", "[LogisticRegression]" )
         temp(i, 1) /= sigma(1);
     }
 
-    //X.block(0, 1, m, n) = temp;
+    X.block(0, 1, m, n) = temp;
 
-    theta = gradientDescentLogistic(X, y, theta, 0.01, 400);
-    std::cout << "theta: " << theta << std::endl;
-    std::cout << "cost: " << computeCostSigmoid(X, y, theta) << std::endl; // 0.203
+    J = gradientDescentLogistic(X, y, theta, 0.01, 50000);
 
+    REQUIRE_THAT(J, Catch::Matchers::WithinAbs(0.203, 0.001));
 
-//	assertValue("Theta 0", -25.161, theta(0));
-//	assertValue("Theta 1", 0.206, theta(1));
-//	assertValue("Theta 2", 0.201, theta(2));
+    REQUIRE_THAT(theta(0), Catch::Matchers::WithinAbs(1.68459, 0.001));
+    REQUIRE_THAT(theta(1), Catch::Matchers::WithinAbs(3.94023, 0.001));
+    REQUIRE_THAT(theta(2), Catch::Matchers::WithinAbs(3.67359, 0.001));
 
     VectorXd predict(n + 1);
-    predict << 1, 45, 85;
-    //predict(1) = (predict(1) - mu(0)) / sigma(0);
-    //predict(2) = (predict(2) - mu(1)) / sigma(1);
+    predict << 1, 45, 85; // Predict admission for a student with scores 45 and 85
+    predict(1) = (predict(1) - mu(0)) / sigma(0);
+    predict(2) = (predict(2) - mu(1)) / sigma(1);
 
     VectorXd prob = sigmoid(predict.transpose() * theta);
-    std::cout << "prob: " << prob << std::endl;
-    //assertValue("Predict admission for a student with scores 45 and 85", 0.775, prob(0));
+
+    REQUIRE_THAT(prob(0), Catch::Matchers::WithinAbs(0.775, 0.01));
 
     MatrixXd p = predictLabels(X, theta);
-//std::cout << "p == y: " << (p.cwiseEqual(y)) << std::endl;
-    //std::cout << "y: " << y << std::endl;
-    //std::cout << "p: " << p << std::endl;
-    int c = 0;
-    for (int i = 0; i < m; ++i) {
-        if (p(i) == y(i)) ++c;
-    }
-    std::cout << "Correct: " << (double) c << std::endl << (double) m << std::endl;
 
-    //assertValue('Training accuracy:', 89.0, p.cwiseEqual(y).mean() * 100);
+    int accuracy = 0;
+    for (int i = 0; i < m; ++i) {
+        if (p(i) == y(i)) ++accuracy;
+    }
+
+    // Train Accuracy
+    REQUIRE_THAT(accuracy, Catch::Matchers::WithinAbs(89.0, 0.1));
 }
