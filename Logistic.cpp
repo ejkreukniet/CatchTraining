@@ -138,5 +138,6 @@ TEST_CASE( "Logistic Regression", "[LogisticRegression]" )
 
     MatrixXd p = predictLabels(X, theta);
 
-    REQUIRE_THAT(p.cwiseEqual(y).count(), Catch::Matchers::WithinAbs(89.0, 0.1));
+    // Train Accuracy
+    REQUIRE(p.cwiseEqual(y).count() == 89);
 }
