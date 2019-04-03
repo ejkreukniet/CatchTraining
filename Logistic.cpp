@@ -44,6 +44,8 @@ double gradientDescentLogistic(MatrixXd X, MatrixXd y, VectorXd &theta, double a
         J_history(i) = computeCostSigmoid(X, y, theta, grad);
     }
 
+//    std::cout << "J_history: " << J_history << std::endl;
+
     return J_history(iterations - 1);
 }
 
@@ -136,11 +138,5 @@ TEST_CASE( "Logistic Regression", "[LogisticRegression]" )
 
     MatrixXd p = predictLabels(X, theta);
 
-    int accuracy = 0;
-    for (int i = 0; i < m; ++i) {
-        if (p(i) == y(i)) ++accuracy;
-    }
-
-    // Train Accuracy
-    REQUIRE_THAT(accuracy, Catch::Matchers::WithinAbs(89.0, 0.1));
+    REQUIRE_THAT(p.cwiseEqual(y).count(), Catch::Matchers::WithinAbs(89.0, 0.1));
 }
