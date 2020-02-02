@@ -62,11 +62,11 @@ MatrixXd predictLabels(MatrixXd X, VectorXd theta)
     return h;
 }
 
-TEST_CASE( "Logistic Regression", "[LogisticRegression]" )
+TEST_CASE( "Logistic regression", "[LogisticRegression]" )
 {
     const int NUMBER_OF_VALUES = 1;
 
-    MatrixXd data = load_csv("../logistic.csv");
+    MatrixXd data = load_csv("./logistic.csv");
     int m = (int) data.rows(); // Number of training samples
     int n = (int) data.cols() - NUMBER_OF_VALUES; // Number of features
 
@@ -88,22 +88,22 @@ TEST_CASE( "Logistic Regression", "[LogisticRegression]" )
 
     double J = computeCostSigmoid(X, y, theta, grad);
 
-    REQUIRE_THAT(J, Catch::Matchers::WithinAbs(0.6931, 0.0001));
+    REQUIRE_THAT(J, Catch::Matchers::WithinAbs(0.6931, HIGH_ACCURACY));
 
-    REQUIRE_THAT(grad(0), Catch::Matchers::WithinAbs(-0.1000, 0.0001));
-    REQUIRE_THAT(grad(1), Catch::Matchers::WithinAbs(-12.0092, 0.0001));
-    REQUIRE_THAT(grad(2), Catch::Matchers::WithinAbs(-11.2628, 0.0001));
+    REQUIRE_THAT(grad(0), Catch::Matchers::WithinAbs(-0.1000, HIGH_ACCURACY));
+    REQUIRE_THAT(grad(1), Catch::Matchers::WithinAbs(-12.0092, HIGH_ACCURACY));
+    REQUIRE_THAT(grad(2), Catch::Matchers::WithinAbs(-11.2628, HIGH_ACCURACY));
 
     VectorXd test(n + 1);
     test << -24, 0.2, 0.2;
 
     J = computeCostSigmoid(X, y, test, grad);
 
-    REQUIRE_THAT(J, Catch::Matchers::WithinAbs(0.2183, 0.0001));
+    REQUIRE_THAT(J, Catch::Matchers::WithinAbs(0.2183, HIGH_ACCURACY));
 
-    REQUIRE_THAT(grad(0), Catch::Matchers::WithinAbs(0.043, 0.001));
-    REQUIRE_THAT(grad(1), Catch::Matchers::WithinAbs(2.566, 0.001));
-    REQUIRE_THAT(grad(2), Catch::Matchers::WithinAbs(2.647, 0.001));
+    REQUIRE_THAT(grad(0), Catch::Matchers::WithinAbs(0.043, LOW_ACCURACY));
+    REQUIRE_THAT(grad(1), Catch::Matchers::WithinAbs(2.566, LOW_ACCURACY));
+    REQUIRE_THAT(grad(2), Catch::Matchers::WithinAbs(2.647, LOW_ACCURACY));
 
     // Feature normalize
     VectorXd mu = X.rightCols(n).colwise().mean();
@@ -121,11 +121,11 @@ TEST_CASE( "Logistic Regression", "[LogisticRegression]" )
 
     J = gradientDescentLogistic(X, y, theta, 0.01, 50000);
 
-    REQUIRE_THAT(J, Catch::Matchers::WithinAbs(0.203, 0.001));
+    REQUIRE_THAT(J, Catch::Matchers::WithinAbs(0.203, LOW_ACCURACY));
 
-    REQUIRE_THAT(theta(0), Catch::Matchers::WithinAbs(1.68459, 0.001));
-    REQUIRE_THAT(theta(1), Catch::Matchers::WithinAbs(3.94023, 0.001));
-    REQUIRE_THAT(theta(2), Catch::Matchers::WithinAbs(3.67359, 0.001));
+    REQUIRE_THAT(theta(0), Catch::Matchers::WithinAbs(1.68459, LOW_ACCURACY));
+    REQUIRE_THAT(theta(1), Catch::Matchers::WithinAbs(3.94023, LOW_ACCURACY));
+    REQUIRE_THAT(theta(2), Catch::Matchers::WithinAbs(3.67359, LOW_ACCURACY));
 
     VectorXd predict(n + 1);
     predict << 1, 45, 85; // Predict admission for a student with scores 45 and 85

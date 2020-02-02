@@ -1,0 +1,1 @@
+./CatchTraining --durations yes

@@ -42,11 +42,11 @@ VectorXd normalEquation(MatrixXd X, MatrixXd y)
     return (X.transpose() * X).inverse() * X.transpose() * y;
 }
 
-TEST_CASE("Multiple Features", "[MultipleFeatures]")
+TEST_CASE("Multiple features", "[MultipleFeatures]")
 {
     const int NUMBER_OF_VALUES = 1;
 
-    MatrixXd data = load_csv("../multiple-features.csv");
+    MatrixXd data = load_csv("./multiple-features.csv");
     int m = (int) data.rows(); // Number of training samples
     int n = (int) data.cols() - NUMBER_OF_VALUES; // Number of features
 
@@ -68,13 +68,13 @@ TEST_CASE("Multiple Features", "[MultipleFeatures]")
     // Feature normalize
     VectorXd mu = X.rightCols(n).colwise().mean();
 
-    REQUIRE_THAT(mu(0), Catch::Matchers::WithinAbs(2000.6809, 0.0001));
-    REQUIRE_THAT(mu(1), Catch::Matchers::WithinAbs(3.1702, 0.0001));
+    REQUIRE_THAT(mu(0), Catch::Matchers::WithinAbs(2000.6809, HIGH_ACCURACY));
+    REQUIRE_THAT(mu(1), Catch::Matchers::WithinAbs(3.1702, HIGH_ACCURACY));
 
     VectorXd sigma = ((X.rightCols(n).rowwise() - mu.transpose()).array().square().colwise().sum() / (m - 1)).sqrt();
 
-    REQUIRE_THAT(sigma(0), Catch::Matchers::WithinAbs(794.70235, 0.0001));
-    REQUIRE_THAT(sigma(1), Catch::Matchers::WithinAbs(0.76098, 0.0001));
+    REQUIRE_THAT(sigma(0), Catch::Matchers::WithinAbs(794.70235, HIGH_ACCURACY));
+    REQUIRE_THAT(sigma(1), Catch::Matchers::WithinAbs(0.76098, HIGH_ACCURACY));
 
     MatrixXd temp = X.rightCols(n).rowwise() - mu.transpose();
 
@@ -88,9 +88,9 @@ TEST_CASE("Multiple Features", "[MultipleFeatures]")
     SECTION("With gradient descent") {
         theta = gradientDescentMulti(X, y, theta, 0.01, 400);
 
-        REQUIRE_THAT(theta(0), Catch::Matchers::WithinAbs(334302.0639, 0.0001));
-        REQUIRE_THAT(theta(1), Catch::Matchers::WithinAbs(100087.116, 0.0001));
-        REQUIRE_THAT(theta(2), Catch::Matchers::WithinAbs(3673.5484, 0.0001));
+        REQUIRE_THAT(theta(0), Catch::Matchers::WithinAbs(334302.0639, HIGH_ACCURACY));
+        REQUIRE_THAT(theta(1), Catch::Matchers::WithinAbs(100087.116, HIGH_ACCURACY));
+        REQUIRE_THAT(theta(2), Catch::Matchers::WithinAbs(3673.5484, HIGH_ACCURACY));
 
         VectorXd predict(n + 1);
         predict << 1, 1650, 3; // Predicted price of a 1650 sq-ft, 3 br house
@@ -99,7 +99,7 @@ TEST_CASE("Multiple Features", "[MultipleFeatures]")
 
         double price = theta.transpose().dot(predict);
 
-        REQUIRE_THAT(price, Catch::Matchers::WithinAbs(289314.620338, 0.0001));
+        REQUIRE_THAT(price, Catch::Matchers::WithinAbs(289314.620338, HIGH_ACCURACY));
     }
 
     SECTION("With normal equation") {
@@ -109,15 +109,15 @@ TEST_CASE("Multiple Features", "[MultipleFeatures]")
 
         theta = normalEquation(X, y);
 
-        REQUIRE_THAT(theta(0), Catch::Matchers::WithinAbs(89597.9095, 0.0001));
-        REQUIRE_THAT(theta(1), Catch::Matchers::WithinAbs(139.2107, 0.0001));
-        REQUIRE_THAT(theta(2), Catch::Matchers::WithinAbs(-8738.0191, 0.0001));
+        REQUIRE_THAT(theta(0), Catch::Matchers::WithinAbs(89597.9095, HIGH_ACCURACY));
+        REQUIRE_THAT(theta(1), Catch::Matchers::WithinAbs(139.2107, HIGH_ACCURACY));
+        REQUIRE_THAT(theta(2), Catch::Matchers::WithinAbs(-8738.0191, HIGH_ACCURACY));
 
         VectorXd predict(n + 1);
         predict << 1, 1650, 3; // Predicted price of a 1650 sq-ft, 3 br house
 
         double price = theta.transpose().dot(predict);
 
-        REQUIRE_THAT(price, Catch::Matchers::WithinAbs(293081.464335, 0.0001));
+        REQUIRE_THAT(price, Catch::Matchers::WithinAbs(293081.464335, HIGH_ACCURACY));
     }
 }

@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.13)
-project(MachineLearning)
+project(CatchTraining)
 
 set(CMAKE_CXX_STANDARD 14)
 
-include_directories(/mnt/sdb1/Project/MachineLearning/eigen/)
+include_directories(/mnt/d/Project/MachineLearning/eigen/)
 
-add_executable(MachineLearning main.cpp Common.cpp Logistic.cpp Multi.cpp Single.cpp)
+add_executable(CatchTraining main.cpp Common.cpp Logistic.cpp Multi.cpp Single.cpp)

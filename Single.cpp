@@ -35,11 +35,11 @@ VectorXd gradientDescent(MatrixXd X, MatrixXd y, VectorXd theta, double alpha, i
     return theta;
 }
 
-TEST_CASE( "Single Feature", "[SingleFeature]" )
+TEST_CASE( "Single feature", "[SingleFeature]" )
 {
     const int NUMBER_OF_VALUES = 1;
 
-    MatrixXd data = load_csv("../single-feature.csv");
+    MatrixXd data = load_csv("./single-feature.csv");
     int m = (int) data.rows(); // Number of training samples
     int n = (int) data.cols() - NUMBER_OF_VALUES; // Number of features
 
@@ -60,27 +60,27 @@ TEST_CASE( "Single Feature", "[SingleFeature]" )
 
     double J = computeCost(X, y, theta);
 
-    REQUIRE_THAT(J, Catch::Matchers::WithinAbs(32.0727, 0.0001));
+    REQUIRE_THAT(J, Catch::Matchers::WithinAbs(32.0727, HIGH_ACCURACY));
 
     VectorXd test(n + 1);
     test << -1, 2;
 
     J = computeCost(X, y, test);
 
-    REQUIRE_THAT(J, Catch::Matchers::WithinAbs(54.2425, 0.0001));
+    REQUIRE_THAT(J, Catch::Matchers::WithinAbs(54.2425, HIGH_ACCURACY));
 
     theta = gradientDescent(X, y, theta, 0.01, 1500);
 
-    REQUIRE_THAT(theta(0), Catch::Matchers::WithinAbs(-3.6303, 0.0001));
-    REQUIRE_THAT(theta(1), Catch::Matchers::WithinAbs(1.1664, 0.0001));
+    REQUIRE_THAT(theta(0), Catch::Matchers::WithinAbs(-3.6303, HIGH_ACCURACY));
+    REQUIRE_THAT(theta(1), Catch::Matchers::WithinAbs(1.1664, HIGH_ACCURACY));
 
     MatrixXd predict1(1, n + 1);
     predict1 << 1, 3.5; // Predict profit for population 35,000
 
-    REQUIRE_THAT((predict1 * theta * 10000.0)(0), Catch::Matchers::WithinAbs(4519.767868, 0.0001));
+    REQUIRE_THAT((predict1 * theta * 10000.0)(0), Catch::Matchers::WithinAbs(4519.767868, HIGH_ACCURACY));
 
     MatrixXd predict2(1, n + 1);
     predict2 << 1, 7; // Predict profit for population 70,000
 
-    REQUIRE_THAT((predict2 * theta * 10000.0)(0), Catch::Matchers::WithinAbs(45342.450129, 0.0001));
+    REQUIRE_THAT((predict2 * theta * 10000.0)(0), Catch::Matchers::WithinAbs(45342.450129, HIGH_ACCURACY));
 }
